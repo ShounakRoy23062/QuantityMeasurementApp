@@ -2,100 +2,91 @@ package com.apps.quantitymeasurement;
 
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import com.apps.quantitymeasurement.QuantityMeasurementApp.Quantity;
 import com.apps.quantitymeasurement.QuantityMeasurementApp.LengthUnit;
+import com.apps.quantitymeasurement.QuantityMeasurementApp.Quantity;
 
 public class QuantityMeasurementAppTest {
 
+    private static final double EPSILON = 1e-6;
+
     @Test
-    public void testEquality_YardToYard_SameValue() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.YARD);
-        Quantity q2 = new Quantity(1.0, LengthUnit.YARD);
-        assertTrue(q1.equals(q2));
+    public void testConversion_FeetToInches() {
+        assertEquals(12.0, QuantityMeasurementApp.convert(1.0, LengthUnit.FEET, LengthUnit.INCH), EPSILON);
     }
 
     @Test
-    public void testEquality_YardToYard_DifferentValue() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.YARD);
-        Quantity q2 = new Quantity(2.0, LengthUnit.YARD);
-        assertFalse(q1.equals(q2));
+    public void testConversion_InchesToFeet() {
+        assertEquals(2.0, QuantityMeasurementApp.convert(24.0, LengthUnit.INCH, LengthUnit.FEET), EPSILON);
     }
 
     @Test
-    public void testEquality_YardToFeet_EquivalentValue() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.YARD);
-        Quantity q2 = new Quantity(3.0, LengthUnit.FEET);
-        assertTrue(q1.equals(q2));
+    public void testConversion_YardsToInches() {
+        assertEquals(36.0, QuantityMeasurementApp.convert(1.0, LengthUnit.YARD, LengthUnit.INCH), EPSILON);
     }
 
     @Test
-    public void testEquality_FeetToYard_EquivalentValue() {
-        Quantity q1 = new Quantity(3.0, LengthUnit.FEET);
-        Quantity q2 = new Quantity(1.0, LengthUnit.YARD);
-        assertTrue(q1.equals(q2));
+    public void testConversion_InchesToYards() {
+        assertEquals(2.0, QuantityMeasurementApp.convert(72.0, LengthUnit.INCH, LengthUnit.YARD), EPSILON);
     }
 
     @Test
-    public void testEquality_YardToInches_EquivalentValue() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.YARD);
-        Quantity q2 = new Quantity(36.0, LengthUnit.INCH);
-        assertTrue(q1.equals(q2));
+    public void testConversion_CentimetersToInches() {
+        assertEquals(1.0, QuantityMeasurementApp.convert(2.54, LengthUnit.CENTIMETER, LengthUnit.INCH), EPSILON);
     }
 
     @Test
-    public void testEquality_InchesToYard_EquivalentValue() {
-        Quantity q1 = new Quantity(36.0, LengthUnit.INCH);
-        Quantity q2 = new Quantity(1.0, LengthUnit.YARD);
-        assertTrue(q1.equals(q2));
+    public void testConversion_FeetToYard() {
+        assertEquals(2.0, QuantityMeasurementApp.convert(6.0, LengthUnit.FEET, LengthUnit.YARD), EPSILON);
     }
 
     @Test
-    public void testEquality_YardToFeet_NonEquivalentValue() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.YARD);
-        Quantity q2 = new Quantity(2.0, LengthUnit.FEET);
-        assertFalse(q1.equals(q2));
+    public void testConversion_RoundTrip_PreservesValue() {
+        double value = 5.0;
+        double result = QuantityMeasurementApp.convert(
+                QuantityMeasurementApp.convert(value, LengthUnit.FEET, LengthUnit.INCH),
+                LengthUnit.INCH,
+                LengthUnit.FEET
+        );
+        assertEquals(value, result, EPSILON);
     }
 
     @Test
-    public void testEquality_CentimetersToInches_EquivalentValue() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.CENTIMETER);
-        Quantity q2 = new Quantity(0.393701, LengthUnit.INCH);
-        assertTrue(q1.equals(q2));
+    public void testConversion_ZeroValue() {
+        assertEquals(0.0, QuantityMeasurementApp.convert(0.0, LengthUnit.FEET, LengthUnit.INCH), EPSILON);
     }
 
     @Test
-    public void testEquality_CentimetersToFeet_NonEquivalentValue() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.CENTIMETER);
-        Quantity q2 = new Quantity(1.0, LengthUnit.FEET);
-        assertFalse(q1.equals(q2));
+    public void testConversion_NegativeValue() {
+        assertEquals(-12.0, QuantityMeasurementApp.convert(-1.0, LengthUnit.FEET, LengthUnit.INCH), EPSILON);
     }
 
     @Test
-    public void testEquality_MultiUnit_TransitiveProperty() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.YARD);
-        Quantity q2 = new Quantity(3.0, LengthUnit.FEET);
-        Quantity q3 = new Quantity(36.0, LengthUnit.INCH);
-        assertTrue(q1.equals(q2));
-        assertTrue(q2.equals(q3));
-        assertTrue(q1.equals(q3));
-    }
-
-    @Test
-    public void testEquality_NullComparison() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.YARD);
-        assertFalse(q1.equals(null));
-    }
-
-    @Test
-    public void testEquality_SameReference() {
-        Quantity q1 = new Quantity(1.0, LengthUnit.YARD);
-        assertTrue(q1.equals(q1));
-    }
-
-    @Test
-    public void testEquality_InvalidUnit() {
+    public void testConversion_InvalidUnit_Throws() {
         assertThrows(IllegalArgumentException.class, () -> {
-            new Quantity(1.0, null);
+            QuantityMeasurementApp.convert(1.0, null, LengthUnit.FEET);
         });
+    }
+
+    @Test
+    public void testConversion_NaNOrInfinite_Throws() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            QuantityMeasurementApp.convert(Double.NaN, LengthUnit.FEET, LengthUnit.INCH);
+        });
+        assertThrows(IllegalArgumentException.class, () -> {
+            QuantityMeasurementApp.convert(Double.POSITIVE_INFINITY, LengthUnit.FEET, LengthUnit.INCH);
+        });
+    }
+
+    @Test
+    public void testConversion_PrecisionTolerance() {
+        double result = QuantityMeasurementApp.convert(1.0, LengthUnit.CENTIMETER, LengthUnit.INCH);
+        assertEquals(0.393701, result, EPSILON);
+    }
+
+    @Test
+    public void testInstanceConversion() {
+        Quantity q = new Quantity(1.0, LengthUnit.FEET);
+        Quantity converted = q.convertTo(LengthUnit.INCH);
+        assertEquals(12.0, converted.convertTo(LengthUnit.INCH).value, EPSILON);
     }
 }
