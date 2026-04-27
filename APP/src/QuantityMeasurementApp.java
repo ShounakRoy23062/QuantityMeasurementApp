@@ -40,6 +40,15 @@ public class QuantityMeasurementApp {
             return new Quantity(converted, targetUnit);
         }
 
+        public Quantity add(Quantity other) {
+            if (other == null || other.unit == null) throw new IllegalArgumentException();
+            double base1 = this.unit.toBase(this.value);
+            double base2 = other.unit.toBase(other.value);
+            double sumBase = base1 + base2;
+            double result = this.unit.fromBase(sumBase);
+            return new Quantity(result, this.unit);
+        }
+
         private double toFeet() {
             return unit.toBase(value);
         }
@@ -64,28 +73,30 @@ public class QuantityMeasurementApp {
         return target.fromBase(base);
     }
 
-    public static double demonstrateLengthConversion(double value, LengthUnit from, LengthUnit to) {
-        return convert(value, from, to);
+    public static Quantity add(Quantity q1, Quantity q2) {
+        if (q1 == null || q2 == null) throw new IllegalArgumentException();
+        return q1.add(q2);
     }
 
-    public static double demonstrateLengthConversion(Quantity quantity, LengthUnit to) {
-        return quantity.convertTo(to).value;
-    }
-
-    public static boolean demonstrateLengthEquality(Quantity q1, Quantity q2) {
-        return q1.equals(q2);
-    }
-
-    public static boolean demonstrateLengthComparison(double v1, LengthUnit u1, double v2, LengthUnit u2) {
-        Quantity q1 = new Quantity(v1, u1);
-        Quantity q2 = new Quantity(v2, u2);
-        return q1.equals(q2);
+    public static Quantity add(double v1, LengthUnit u1, double v2, LengthUnit u2, LengthUnit target) {
+        if (u1 == null || u2 == null || target == null || !Double.isFinite(v1) || !Double.isFinite(v2))
+            throw new IllegalArgumentException();
+        double base1 = u1.toBase(v1);
+        double base2 = u2.toBase(v2);
+        double sumBase = base1 + base2;
+        double result = target.fromBase(sumBase);
+        return new Quantity(result, target);
     }
 
     public static void main(String[] args) {
-        System.out.println(convert(1.0, LengthUnit.FEET, LengthUnit.INCH));
-        System.out.println(convert(3.0, LengthUnit.YARD, LengthUnit.FEET));
-        System.out.println(convert(36.0, LengthUnit.INCH, LengthUnit.YARD));
-        System.out.println(convert(1.0, LengthUnit.CENTIMETER, LengthUnit.INCH));
+        Quantity q1 = new Quantity(1.0, LengthUnit.FEET);
+        Quantity q2 = new Quantity(12.0, LengthUnit.INCH);
+        System.out.println(q1.add(q2));
+
+        Quantity q3 = new Quantity(1.0, LengthUnit.YARD);
+        Quantity q4 = new Quantity(3.0, LengthUnit.FEET);
+        System.out.println(q3.add(q4));
+
+        System.out.println(add(2.54, LengthUnit.CENTIMETER, 1.0, LengthUnit.INCH, LengthUnit.CENTIMETER));
     }
 }
