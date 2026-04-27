@@ -2,27 +2,6 @@ package com.apps.quantitymeasurement;
 
 public class QuantityMeasurementApp {
 
-    public enum LengthUnit {
-        FEET(1.0),
-        INCH(1.0 / 12.0),
-        YARD(3.0),
-        CENTIMETER(0.0328084);
-
-        private final double toFeet;
-
-        LengthUnit(double toFeet) {
-            this.toFeet = toFeet;
-        }
-
-        public double toBase(double value) {
-            return value * toFeet;
-        }
-
-        public double fromBase(double baseValue) {
-            return baseValue / toFeet;
-        }
-    }
-
     public static class Quantity {
         private final double value;
         private final LengthUnit unit;
@@ -35,25 +14,25 @@ public class QuantityMeasurementApp {
 
         public Quantity convertTo(LengthUnit targetUnit) {
             if (targetUnit == null) throw new IllegalArgumentException();
-            double base = unit.toBase(value);
-            double converted = targetUnit.fromBase(base);
+            double base = unit.convertToBaseUnit(value);
+            double converted = targetUnit.convertFromBaseUnit(base);
             return new Quantity(converted, targetUnit);
         }
 
         private double toBase() {
-            return unit.toBase(value);
+            return unit.convertToBaseUnit(value);
         }
 
         private static Quantity addInternal(Quantity q1, Quantity q2, LengthUnit targetUnit) {
             double base1 = q1.toBase();
             double base2 = q2.toBase();
             double sumBase = base1 + base2;
-            double result = targetUnit.fromBase(sumBase);
+            double result = targetUnit.convertFromBaseUnit(sumBase);
             return new Quantity(result, targetUnit);
         }
 
         public Quantity add(Quantity other) {
-            if (other == null || other.unit == null) throw new IllegalArgumentException();
+            if (other == null) throw new IllegalArgumentException();
             return addInternal(this, other, this.unit);
         }
 
@@ -78,8 +57,8 @@ public class QuantityMeasurementApp {
 
     public static double convert(double value, LengthUnit source, LengthUnit target) {
         if (source == null || target == null || !Double.isFinite(value)) throw new IllegalArgumentException();
-        double base = source.toBase(value);
-        return target.fromBase(base);
+        double base = source.convertToBaseUnit(value);
+        return target.convertFromBaseUnit(base);
     }
 
     public static Quantity add(Quantity q1, Quantity q2, LengthUnit targetUnit) {
@@ -90,10 +69,10 @@ public class QuantityMeasurementApp {
     public static Quantity add(double v1, LengthUnit u1, double v2, LengthUnit u2, LengthUnit target) {
         if (u1 == null || u2 == null || target == null || !Double.isFinite(v1) || !Double.isFinite(v2))
             throw new IllegalArgumentException();
-        double base1 = u1.toBase(v1);
-        double base2 = u2.toBase(v2);
+        double base1 = u1.convertToBaseUnit(v1);
+        double base2 = u2.convertToBaseUnit(v2);
         double sumBase = base1 + base2;
-        double result = target.fromBase(sumBase);
+        double result = target.convertFromBaseUnit(sumBase);
         return new Quantity(result, target);
     }
 
@@ -101,8 +80,8 @@ public class QuantityMeasurementApp {
         Quantity q1 = new Quantity(1.0, LengthUnit.FEET);
         Quantity q2 = new Quantity(12.0, LengthUnit.INCH);
 
+        System.out.println(q1.convertTo(LengthUnit.INCH));
         System.out.println(q1.add(q2, LengthUnit.FEET));
-        System.out.println(q1.add(q2, LengthUnit.INCH));
-        System.out.println(q1.add(q2, LengthUnit.YARD));
+        System.out.println(q2.equals(new Quantity(1.0, LengthUnit.YARD)));
     }
 }
