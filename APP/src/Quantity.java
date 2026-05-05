@@ -2,6 +2,23 @@ public class Quantity<U extends IMeasurable> {
     private final double value;
     private final U unit;
 
+    private enum ArithmeticOperation {
+        ADD {
+            public double compute(double a, double b) { return a + b; }
+        },
+        SUBTRACT {
+            public double compute(double a, double b) { return a - b; }
+        },
+        DIVIDE {
+            public double compute(double a, double b) {
+                if (b == 0.0) throw new ArithmeticException();
+                return a / b;
+            }
+        };
+
+        public abstract double compute(double a, double b);
+    }
+
     public Quantity(double value, U unit) {
         if (unit == null || Double.isNaN(value) || Double.isInfinite(value)) {
             throw new IllegalArgumentException();
@@ -10,11 +27,27 @@ public class Quantity<U extends IMeasurable> {
         this.unit = unit;
     }
 
+    private void validate(Quantity<U> other, U targetUnit, boolean needTarget) {
+        if (other == null) throw new IllegalArgumentException();
+        if (!this.unit.getClass().equals(other.unit.getClass())) throw new IllegalArgumentException();
+        if (Double.isNaN(other.value) || Double.isInfinite(other.value)) throw new IllegalArgumentException();
+        if (needTarget && targetUnit == null) throw new IllegalArgumentException();
+    }
+
+    private double performBase(Quantity<U> other, ArithmeticOperation op) {
+        double base1 = this.unit.convertToBaseUnit(this.value);
+        double base2 = other.unit.convertToBaseUnit(other.value);
+        return op.compute(base1, base2);
+    }
+
+    private double round(double v) {
+        return Math.round(v * 100.0) / 100.0;
+    }
+
     public Quantity<U> convertTo(U targetUnit) {
         double base = unit.convertToBaseUnit(value);
-        double converted = targetUnit.convertFromBaseUnit(base);
-        double rounded = Math.round(converted * 100.0) / 100.0;
-        return new Quantity<>(rounded, targetUnit);
+        double result = targetUnit.convertFromBaseUnit(base);
+        return new Quantity<>(round(result), targetUnit);
     }
 
     public Quantity<U> add(Quantity<U> other) {
@@ -22,12 +55,10 @@ public class Quantity<U extends IMeasurable> {
     }
 
     public Quantity<U> add(Quantity<U> other, U targetUnit) {
-        double base1 = this.unit.convertToBaseUnit(this.value);
-        double base2 = other.unit.convertToBaseUnit(other.value);
-        double result = base1 + base2;
-        double finalValue = targetUnit.convertFromBaseUnit(result);
-        double rounded = Math.round(finalValue * 100.0) / 100.0;
-        return new Quantity<>(rounded, targetUnit);
+        validate(other, targetUnit, true);
+        double base = performBase(other, ArithmeticOperation.ADD);
+        double result = targetUnit.convertFromBaseUnit(base);
+        return new Quantity<>(round(result), targetUnit);
     }
 
     public Quantity<U> subtract(Quantity<U> other) {
@@ -35,41 +66,15 @@ public class Quantity<U extends IMeasurable> {
     }
 
     public Quantity<U> subtract(Quantity<U> other, U targetUnit) {
-        if (other == null || targetUnit == null) {
-            throw new IllegalArgumentException();
-        }
-
-        if (!this.unit.getClass().equals(other.unit.getClass())) {
-            throw new IllegalArgumentException();
-        }
-
-        double base1 = this.unit.convertToBaseUnit(this.value);
-        double base2 = other.unit.convertToBaseUnit(other.value);
-
-        double result = base1 - base2;
-        double finalValue = targetUnit.convertFromBaseUnit(result);
-        double rounded = Math.round(finalValue * 100.0) / 100.0;
-
-        return new Quantity<>(rounded, targetUnit);
+        validate(other, targetUnit, true);
+        double base = performBase(other, ArithmeticOperation.SUBTRACT);
+        double result = targetUnit.convertFromBaseUnit(base);
+        return new Quantity<>(round(result), targetUnit);
     }
 
     public double divide(Quantity<U> other) {
-        if (other == null) {
-            throw new IllegalArgumentException();
-        }
-
-        if (!this.unit.getClass().equals(other.unit.getClass())) {
-            throw new IllegalArgumentException();
-        }
-
-        double base1 = this.unit.convertToBaseUnit(this.value);
-        double base2 = other.unit.convertToBaseUnit(other.value);
-
-        if (base2 == 0.0) {
-            throw new ArithmeticException();
-        }
-
-        return base1 / base2;
+        validate(other, null, false);
+        return performBase(other, ArithmeticOperation.DIVIDE);
     }
 
     public boolean equals(Object obj) {
@@ -87,8 +92,7 @@ public class Quantity<U extends IMeasurable> {
     }
 
     public int hashCode() {
-        double base = unit.convertToBaseUnit(value);
-        return Double.hashCode(base);
+        return Double.hashCode(unit.convertToBaseUnit(value));
     }
 
     public String toString() {
