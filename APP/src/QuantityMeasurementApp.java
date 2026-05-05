@@ -12,31 +12,32 @@ public class QuantityMeasurementApp {
         System.out.println(q1.add(q2, target));
     }
 
+    public static <U extends IMeasurable> void demonstrateSubtraction(Quantity<U> q1, Quantity<U> q2, U target) {
+        System.out.println(q1.subtract(q2, target));
+    }
+
+    public static <U extends IMeasurable> void demonstrateDivision(Quantity<U> q1, Quantity<U> q2) {
+        System.out.println(q1.divide(q2));
+    }
+
     public static void main(String[] args) {
 
-        Quantity<LengthUnit> l1 = new Quantity<>(1.0, LengthUnit.FEET);
-        Quantity<LengthUnit> l2 = new Quantity<>(12.0, LengthUnit.INCHES);
+        Quantity<LengthUnit> l1 = new Quantity<>(10.0, LengthUnit.FEET);
+        Quantity<LengthUnit> l2 = new Quantity<>(6.0, LengthUnit.INCHES);
 
-        demonstrateEquality(l1, l2);
-        demonstrateConversion(l1, LengthUnit.INCHES);
-        demonstrateAddition(l1, l2, LengthUnit.FEET);
+        demonstrateSubtraction(l1, l2, LengthUnit.FEET);
+        demonstrateDivision(l1, new Quantity<>(2.0, LengthUnit.FEET));
 
-        Quantity<WeightUnit> w1 = new Quantity<>(1.0, WeightUnit.KILOGRAM);
-        Quantity<WeightUnit> w2 = new Quantity<>(1000.0, WeightUnit.GRAM);
+        Quantity<WeightUnit> w1 = new Quantity<>(10.0, WeightUnit.KILOGRAM);
+        Quantity<WeightUnit> w2 = new Quantity<>(5000.0, WeightUnit.GRAM);
 
-        demonstrateEquality(w1, w2);
-        demonstrateConversion(w1, WeightUnit.GRAM);
-        demonstrateAddition(w1, w2, WeightUnit.KILOGRAM);
+        demonstrateSubtraction(w1, w2, WeightUnit.KILOGRAM);
+        demonstrateDivision(w1, new Quantity<>(5.0, WeightUnit.KILOGRAM));
 
-        Quantity<VolumeUnit> v1 = new Quantity<>(1.0, VolumeUnit.LITRE);
-        Quantity<VolumeUnit> v2 = new Quantity<>(1000.0, VolumeUnit.MILLILITRE);
-        Quantity<VolumeUnit> v3 = new Quantity<>(1.0, VolumeUnit.GALLON);
+        Quantity<VolumeUnit> v1 = new Quantity<>(5.0, VolumeUnit.LITRE);
+        Quantity<VolumeUnit> v2 = new Quantity<>(500.0, VolumeUnit.MILLILITRE);
 
-        demonstrateEquality(v1, v2);
-        demonstrateConversion(v1, VolumeUnit.MILLILITRE);
-        demonstrateAddition(v1, v2, VolumeUnit.LITRE);
-
-        demonstrateConversion(v3, VolumeUnit.LITRE);
-        demonstrateAddition(v1, v3, VolumeUnit.MILLILITRE);
+        demonstrateSubtraction(v1, v2, VolumeUnit.LITRE);
+        demonstrateDivision(v1, new Quantity<>(10.0, VolumeUnit.LITRE));
     }
 }
